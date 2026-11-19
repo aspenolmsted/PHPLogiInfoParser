@@ -57,6 +57,23 @@ class ReportRenderer implements ElementRendererInterface
                     window.history.pushState({}, '', link.href);
                 }
             });
+            async function logiRefreshElement(form, targetId) {
+                const url = new URL(window.location.href);
+                const formData = new FormData(form);
+                for (const [key, value] of formData.entries()) {
+                    url.searchParams.set(key, value.toString());
+                }
+                url.searchParams.delete('rdAjaxRefresh');
+                window.history.pushState({}, '', url.toString());
+
+                url.searchParams.set('rdAjaxRefresh', targetId);
+                const res = await fetch(url.toString());
+                if (res.ok) {
+                    const html = await res.text();
+                    const container = document.getElementById(targetId + '_wrapper');
+                    if (container) container.outerHTML = html;
+                }
+            }
             </script>
         </body>
         </html>

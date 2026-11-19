@@ -9,6 +9,7 @@ require_once __DIR__ . '/src/ReportCatalog.php';
 require_once __DIR__ . '/src/Renderers/LayoutRenderers.php';
 require_once __DIR__ . '/src/Renderers/DataTableRenderer.php';
 require_once __DIR__ . '/src/Renderers/ChartRenderer.php';
+require_once __DIR__ . '/src/Renderers/InputRenderers.php';
 
 use LogiPhp\ConnectionManager;
 use LogiPhp\LogiContext;
@@ -20,6 +21,11 @@ use LogiPhp\Renderers\DivisionRenderer;
 use LogiPhp\Renderers\LabelRenderer;
 use LogiPhp\Renderers\LineBreakRenderer;
 use LogiPhp\Renderers\ReportRenderer;
+use LogiPhp\Renderers\FormRenderer;
+use LogiPhp\Renderers\ButtonRenderer;
+use LogiPhp\Renderers\InputSelectListRenderer;
+use LogiPhp\Renderers\InputTextRenderer;
+use LogiPhp\Renderers\InputHiddenRenderer;
 
 session_start();
 // 1. Load named connections and global constants from _Settings.lgx
@@ -38,7 +44,11 @@ $engine->registerRenderer('Division', new DivisionRenderer());
 $engine->registerRenderer('Label', new LabelRenderer());
 $engine->registerRenderer('LineBreak', new LineBreakRenderer());
 $engine->registerRenderer('DataTable', new DataTableRenderer());
-
+$engine->registerRenderer('Form', new FormRenderer());
+$engine->registerRenderer('InputHidden', new InputHiddenRenderer());
+$engine->registerRenderer('InputSelectList', new InputSelectListRenderer());
+$engine->registerRenderer('InputText', new InputTextRenderer());
+$engine->registerRenderer('Button', new ButtonRenderer());
 $chartRenderer = new ChartCanvasRenderer();
 $engine->registerRenderer('ChartCanvas', $chartRenderer);
 $engine->registerRenderer('Chart.XY', $chartRenderer);

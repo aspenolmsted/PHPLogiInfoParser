@@ -12,7 +12,7 @@
                 Port="3306"
                 Database="my_guitar_shop"
                 User="root"
-                Password="mKirsten34b#"
+                Password="Snow123#"
                 Charset="utf8mb4" />
     <!-- Example additional connections supported by the loader:
     <Connection Type="PostgreSQL" ID="connAnalytics" Server="127.0.0.1" Port="5432" Database="analytics" User="postgres" Password="secret" />

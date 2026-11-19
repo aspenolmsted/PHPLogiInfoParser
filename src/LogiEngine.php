@@ -7,6 +7,7 @@ namespace LogiPhp;
 use DOMDocument;
 use DOMElement;
 use DOMXPath;
+use PDO;
 use RuntimeException;
 
 interface ElementRendererInterface
@@ -35,7 +36,7 @@ class LogiEngine
         return $this->connections;
     }
 
-public function renderReport(string $lgxPath, LogiContext $context, ?string $targetElementId = null): string
+    public function renderReport(string $lgxPath, LogiContext $context, ?string $targetElementId = null): string
     {
         if (!is_file($lgxPath)) {
             throw new RuntimeException("LGX file not found at: {$lgxPath}");
@@ -51,15 +52,27 @@ public function renderReport(string $lgxPath, LogiContext $context, ?string $tar
         $dom->preserveWhiteSpace = false;
 
         if (!$dom->loadXML($xmlContent)) {
-            $errors = array_map(fn($e) => trim($e->message), libxml_get_errors());
+            $errors = array_map(static fn($e) => trim($e->message), libxml_get_errors());
             libxml_clear_errors();
             throw new RuntimeException("XML parse error in {$lgxPath}: " . implode('; ', $errors));
         }
         libxml_clear_errors();
 
-        // Support AJAX partial refresh for specific element IDs (e.g., dtCustomers)
+        $xpath = new DOMXPath($dom);
+
+        // Apply <DefaultRequestParams> fallback values when missing or empty in $context->request
+        foreach ($xpath->query('//DefaultRequestParams') as $defaultNode) {
+            if ($defaultNode instanceof DOMElement) {
+                foreach ($defaultNode->attributes as $attr) {
+                    if (!isset($context->request[$attr->nodeName]) || $context->request[$attr->nodeName] === '') {
+                        $context->request[$attr->nodeName] = $attr->nodeValue;
+                    }
+                }
+            }
+        }
+
+        // Support AJAX partial refresh for specific element IDs (e.g., dtCustomers, dtProducts)
         if ($targetElementId !== null) {
-            $xpath = new DOMXPath($dom);
             $nodes = $xpath->query("//*[@ID='{$targetElementId}']");
             if ($nodes->length > 0 && $nodes->item(0) instanceof DOMElement) {
                 return $this->renderNode($nodes->item(0), $context);
@@ -69,7 +82,7 @@ public function renderReport(string $lgxPath, LogiContext $context, ?string $tar
 
         return $this->renderNode($dom->documentElement, $context);
     }
-    
+
     public function renderNode(DOMElement $node, LogiContext $context): string
     {
         if (strtolower($node->getAttribute('IdeDisplay')) === 'false') {
@@ -77,13 +90,14 @@ public function renderReport(string $lgxPath, LogiContext $context, ?string $tar
         }
 
         $tag = $node->tagName;
-        if (isset($this->renderers[$tag])) {
-            return $this->renderers[$tag]->render($node, $this, $context);
+
+        // Ignore design-time, catalog metadata, and parameter declaration nodes during visual rendering
+        if (in_array($tag, ['ideTestParams', 'ReportMeta', 'DefaultRequestParams'], true)) {
+            return '';
         }
 
-        // Ignore metadata nodes like <ideTestParams />
-        if ($tag === 'ideTestParams') {
-            return '';
+        if (isset($this->renderers[$tag])) {
+            return $this->renderers[$tag]->render($node, $this, $context);
         }
 
         return $this->renderChildren($node, $context);
@@ -101,7 +115,7 @@ public function renderReport(string $lgxPath, LogiContext $context, ?string $tar
     }
 
     /**
-     * Executes child DataLayer and applies subsequent DataLayer child filters/transformations.
+     * Executes child DataLayer (SQL or Static) with optional <SqlParameters> PDO bindings.
      */
     public function executeDataLayer(DOMElement $parentNode, LogiContext $context): array
     {
@@ -126,8 +140,27 @@ public function renderReport(string $lgxPath, LogiContext $context, ?string $tar
 
             // Resolve tokens without HTML-escaping SQL syntax
             $sql = $context->resolveTokens($layer->getAttribute('Source'), false);
-            $stmt = $pdo->query($sql);
-            $rows = $stmt ? $stmt->fetchAll() : [];
+            $paramNodes = $xpath->query('./SqlParameters/SqlParameter', $layer);
+
+            if ($paramNodes->length > 0) {
+                $stmt = $pdo->prepare($sql);
+                foreach ($paramNodes as $pNode) {
+                    if ($pNode instanceof DOMElement) {
+                        $paramName = ltrim($pNode->getAttribute('ID'), ':@');
+                        $rawVal = $context->resolveTokens($pNode->getAttribute('Value'), false);
+                        $pdoType = strcasecmp($pNode->getAttribute('DataType'), 'Number') === 0
+                            ? \PDO::PARAM_INT
+                            : \PDO::PARAM_STR;
+                        $boundVal = $pdoType === PDO::PARAM_INT ? (int)$rawVal : $rawVal;
+                        $stmt->bindValue(':' . $paramName, $boundVal, $pdoType);
+                    }
+                }
+                $stmt->execute();
+                $rows = $stmt->fetchAll();
+            } else {
+                $stmt = $pdo->query($sql);
+                $rows = $stmt ? $stmt->fetchAll() : [];
+            }
         } elseif (strcasecmp($type, 'Static') === 0) {
             foreach ($xpath->query('./StaticDataRow', $layer) as $staticRow) {
                 $row = [];
@@ -138,7 +171,6 @@ public function renderReport(string $lgxPath, LogiContext $context, ?string $tar
             }
         }
 
-        // Pipeline hook: future SortFilter, ConditionFilter, CalculatedColumn, GroupFilter go here
         return $rows;
     }
 }

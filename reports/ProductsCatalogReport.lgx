@@ -2,18 +2,44 @@
 <Report ID="ProductsCatalogReport"
         Caption="Product Catalog &amp; Pricing"
         Category="Inventory"
-        Description="Complete listing of guitars and accessories with list prices, discounts, and category breakdown chart."
+        Description="Interactive product catalog with category filter, keyword search, and category breakdown chart."
         SecurityRightID="SalesUser,Admin"
         ShowInMenu="True"
         SavedBy="LogiInfoStudio"
-        SavedAt="2026-11-19 12:00:00"
+        SavedAt="2026-11-19 15:58:00"
         EngineVersion="14.0">
   <ReportMeta SortOrder="20" Icon="tag" />
+  <DefaultRequestParams CategoryID="0" SearchTerm="" />
   <Body>
     <Division ID="divHeader" HtmlDiv="True">
       <Label ID="lblTitle" Caption="My Guitar Shop - Product Catalog" Class="ThemeTextLargest" />
       <LineBreak LineCount="2" />
     </Division>
+
+    <!-- Interactive Filter Bar -->
+    <Division ID="divFilters" HtmlDiv="True" Class="logi-filter-bar">
+      <Form ID="frmProductFilters" Method="GET">
+        <InputHidden ID="rdReport" DefaultValue="ProductsCatalogReport" />
+        <InputSelectList ID="CategoryID"
+                        Caption="Category:"
+                        OptionCaptionColumn="category_name"
+                        OptionValueColumn="category_id"
+                        IncludeBlank="True"
+                        IncludeBlankCaption="-- All Categories --">
+          <DataLayer Type="SQL"
+                    ID="dlCategoryOptions"
+                    ConnectionID="connMyGuitarShop"
+                    Source="SELECT category_id, category_name FROM categories ORDER BY category_name" />
+          <EventHandler DhtmlEvent="onchange">
+            <Action Type="RefreshElement" ElementID="dtProducts" />
+          </EventHandler>
+        </InputSelectList>
+        <InputText ID="SearchTerm" Caption="Search:" DefaultValue="" />
+        <Button ID="btnFilter" Caption="Apply Filter" />
+      </Form>
+    </Division>
+    <LineBreak LineCount="1" />
+
     <Division ID="divContent" HtmlDiv="True">
       <ChartCanvas ID="chartProductsByCategory" ChartWidth="650" ChartHeight="300" ChartCaption="Products per Category">
         <DataLayer Type="SQL" ID="dlProductsByCat" ConnectionID="connMyGuitarShop" Source="SELECT c.category_name, COUNT(p.product_id) AS product_count FROM categories c LEFT JOIN products p ON c.category_id = p.category_id GROUP BY c.category_id, c.category_name ORDER BY product_count DESC" />
@@ -24,8 +50,17 @@
         <ChartYAxis AxisCaption="Number of Products" />
       </ChartCanvas>
       <LineBreak LineCount="2" />
+
       <DataTable ID="dtProducts" AjaxPaging="True" AltRowClass="ThemeAlternatingRow" BorderColor="#CCCCCC" CellPadding="4" CellSpacing="0" Class="ThemeDataTable" Width="100" WidthScale="%">
-        <DataLayer Type="SQL" ID="dlProducts" ConnectionID="connMyGuitarShop" Source="SELECT p.product_id, p.product_code, p.product_name, c.category_name, p.list_price, p.discount_percent FROM products p JOIN categories c ON p.category_id = c.category_id ORDER BY c.category_name, p.product_name" />
+        <DataLayer Type="SQL"
+                   ID="dlProducts"
+                   ConnectionID="connMyGuitarShop"
+                   Source="SELECT p.product_id, p.product_code, p.product_name, c.category_name, p.list_price, p.discount_percent FROM products p JOIN categories c ON p.category_id = c.category_id WHERE (:cat_id = 0 OR p.category_id = :cat_id) AND (:search_term = '' OR p.product_name LIKE CONCAT('%', :search_term, '%') OR p.product_code LIKE CONCAT('%', :search_term, '%')) ORDER BY c.category_name, p.product_name">
+          <SqlParameters>
+            <SqlParameter ID="cat_id" Value="@Request.CategoryID~" DataType="Number" />
+            <SqlParameter ID="search_term" Value="@Request.SearchTerm~" DataType="Text" />
+          </SqlParameters>
+        </DataLayer>
         <DataTableColumn ID="colProductID" Header="ID" Class="ThemeAlignRight">
           <Label ID="lblProductID" Caption="@Data.product_id~" />
           <DataColumnSort DataColumn="product_id" DataType="Number" />
@@ -54,5 +89,5 @@
       </DataTable>
     </Division>
   </Body>
-  <ideTestParams />
+  <ideTestParams CategoryID="1" SearchTerm="Gibson" />
 </Report>

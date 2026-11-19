@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Report ID="CustomersReport"
+        Caption="Customers &amp; Orders Overview"
+        Category="Sales"
+        Description="Customer directory with interactive paging and order volume chart."
+        SecurityRightID="SalesUser,Admin"
+        ShowInMenu="True"
+        SavedBy="LogiInfoStudio"
+        SavedAt="2026-11-19 09:32:00"
+        EngineVersion="14.0">
+  <ReportMeta SortOrder="10" Icon="users" />  <Body>
+    <Division ID="divHeader" HtmlDiv="True">
+      <Label ID="lblTitle" Caption="My Guitar Shop - Customers" Class="ThemeTextLargest" />
+      <LineBreak LineCount="2" />
+    </Division>
+    <Division ID="divContent" HtmlDiv="True">
+      <DataTable ID="dtCustomers" AjaxPaging="True" AltRowClass="ThemeAlternatingRow" BorderColor="#CCCCCC" CellPadding="4" CellSpacing="0" Class="ThemeDataTable" Width="100" WidthScale="%">
+        <DataLayer Type="SQL" ID="dlCustomers" ConnectionID="connMyGuitarShop" Source="SELECT customer_id, email_address, first_name, last_name, shipping_address_id, billing_address_id FROM customers ORDER BY last_name, first_name">
+        </DataLayer>
+        <DataTableColumn ID="colCustomerID" Header="Customer ID" Class="ThemeAlignRight">
+          <Label ID="lblCustomerID" Caption="@Data.customer_id~" />
+          <DataColumnSort DataColumn="customer_id" DataType="Number" />
+        </DataTableColumn>
+        <DataTableColumn ID="colFirstName" Header="First Name">
+          <Label ID="lblFirstName" Caption="@Data.first_name~" />
+          <DataColumnSort DataColumn="first_name" DataType="Text" />
+        </DataTableColumn>
+        <DataTableColumn ID="colLastName" Header="Last Name">
+          <Label ID="lblLastName" Caption="@Data.last_name~" />
+          <DataColumnSort DataColumn="last_name" DataType="Text" />
+        </DataTableColumn>
+        <DataTableColumn ID="colEmail" Header="Email Address">
+          <Label ID="lblEmail" Caption="@Data.email_address~" />
+          <DataColumnSort DataColumn="email_address" DataType="Text" />
+        </DataTableColumn>
+        <DataTableColumn ID="colShippingID" Header="Shipping Address ID" Class="ThemeAlignRight">
+          <Label ID="lblShippingID" Caption="@Data.shipping_address_id~" />
+          <DataColumnSort DataColumn="shipping_address_id" DataType="Number" />
+        </DataTableColumn>
+        <DataTableColumn ID="colBillingID" Header="Billing Address ID" Class="ThemeAlignRight">
+          <Label ID="lblBillingID" Caption="@Data.billing_address_id~" />
+          <DataColumnSort DataColumn="billing_address_id" DataType="Number" />
+        </DataTableColumn>
+        <InteractivePaging PageRowCount="20" ShowPageNumber="Numbered" Location="Bottom" CaptionType="Text" />
+      </DataTable>
+<ChartCanvas ID="chartOrdersByCustomer" ChartWidth="700" ChartHeight="350" ChartCaption="Orders per Customer">
+  <DataLayer Type="SQL" ConnectionID="connMyGuitarShop" Source="SELECT last_name, COUNT(*) AS order_count FROM customers c JOIN orders o ON c.customer_id = o.customer_id GROUP BY c.customer_id, last_name" />
+  <Series Type="Bar" ChartXDataColumn="last_name" ChartYDataColumn="order_count" Color="#2b6cb0">
+    <DataLabels Format="#,##0" />
+  </Series>
+  <ChartXAxis AxisCaption="Customer" />
+  <ChartYAxis AxisCaption="Total Orders" />
+</ChartCanvas>
+<LineBreak LineCount="2" />
+    </Division>
+  </Body>
+  <ideTestParams />
+</Report>

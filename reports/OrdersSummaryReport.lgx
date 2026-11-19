@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Report ID="OrdersSummaryReport"
+        Caption="Customer Orders &amp; Shipping Summary"
+        Category="Sales"
+        Description="Order history with shipping dates, freight charges, and order counts by customer."
+        SecurityRightID="SalesUser,Admin"
+        ShowInMenu="True"
+        SavedBy="LogiInfoStudio"
+        SavedAt="2026-11-19 12:00:00"
+        EngineVersion="14.0">
+  <ReportMeta SortOrder="30" Icon="shopping-cart" />
+  <Body>
+    <Division ID="divHeader" HtmlDiv="True">
+      <Label ID="lblTitle" Caption="My Guitar Shop - Orders Summary" Class="ThemeTextLargest" />
+      <LineBreak LineCount="2" />
+    </Division>
+    <Division ID="divContent" HtmlDiv="True">
+      <DataTable ID="dtOrders" AjaxPaging="True" AltRowClass="ThemeAlternatingRow" BorderColor="#CCCCCC" CellPadding="4" CellSpacing="0" Class="ThemeDataTable" Width="100" WidthScale="%">
+        <DataLayer Type="SQL" ID="dlOrders" ConnectionID="connMyGuitarShop" Source="SELECT o.order_id, CONCAT(c.first_name, ' ', c.last_name) AS customer_name, o.order_date, o.ship_amount, o.tax_amount, o.ship_date, o.card_type FROM orders o JOIN customers c ON o.customer_id = c.customer_id ORDER BY o.order_date DESC" />
+        <DataTableColumn ID="colOrderID" Header="Order ID" Class="ThemeAlignRight">
+          <Label ID="lblOrderID" Caption="@Data.order_id~" />
+          <DataColumnSort DataColumn="order_id" DataType="Number" />
+        </DataTableColumn>
+        <DataTableColumn ID="colCustomer" Header="Customer">
+          <Label ID="lblCustomer" Caption="@Data.customer_name~" />
+          <DataColumnSort DataColumn="customer_name" DataType="Text" />
+        </DataTableColumn>
+        <DataTableColumn ID="colOrderDate" Header="Order Date">
+          <Label ID="lblOrderDate" Caption="@Data.order_date~" />
+          <DataColumnSort DataColumn="order_date" DataType="Text" />
+        </DataTableColumn>
+        <DataTableColumn ID="colShipAmount" Header="Shipping" Class="ThemeAlignRight">
+          <Label ID="lblShipAmount" Caption="@Data.ship_amount~" />
+          <DataColumnSort DataColumn="ship_amount" DataType="Number" />
+        </DataTableColumn>
+        <DataTableColumn ID="colTaxAmount" Header="Tax" Class="ThemeAlignRight">
+          <Label ID="lblTaxAmount" Caption="@Data.tax_amount~" />
+          <DataColumnSort DataColumn="tax_amount" DataType="Number" />
+        </DataTableColumn>
+        <DataTableColumn ID="colCardType" Header="Payment Method">
+          <Label ID="lblCardType" Caption="@Data.card_type~" />
+          <DataColumnSort DataColumn="card_type" DataType="Text" />
+        </DataTableColumn>
+        <InteractivePaging PageRowCount="20" ShowPageNumber="Numbered" Location="Bottom" CaptionType="Text" />
+      </DataTable>
+      <LineBreak LineCount="2" />
+      <ChartCanvas ID="chartOrdersByCardType" ChartWidth="650" ChartHeight="300" ChartCaption="Orders by Payment Method">
+        <DataLayer Type="SQL" ID="dlCardType" ConnectionID="connMyGuitarShop" Source="SELECT card_type, COUNT(*) AS total_orders FROM orders GROUP BY card_type ORDER BY total_orders DESC" />
+        <Series Type="Bar" ChartXDataColumn="card_type" ChartYDataColumn="total_orders" Color="#805ad5">
+          <DataLabels Format="#,##0" />
+        </Series>
+        <ChartXAxis AxisCaption="Card Type" />
+        <ChartYAxis AxisCaption="Orders" />
+      </ChartCanvas>
+    </Division>
+  </Body>
+  <ideTestParams />
+</Report>

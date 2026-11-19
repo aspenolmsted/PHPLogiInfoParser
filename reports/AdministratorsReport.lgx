@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Report ID="AdministratorsReport"
+        Caption="System Administrators"
+        Category="Administration"
+        Description="Internal staff accounts with administrative access (Admin role required)."
+        SecurityRightID="Admin"
+        ShowInMenu="True"
+        SavedBy="LogiInfoStudio"
+        SavedAt="2026-11-19 12:00:00"
+        EngineVersion="14.0">
+  <ReportMeta SortOrder="90" Icon="shield" />
+  <Body>
+    <Division ID="divHeader" HtmlDiv="True">
+      <Label ID="lblTitle" Caption="My Guitar Shop - Administrators" Class="ThemeTextLargest" />
+      <LineBreak LineCount="2" />
+    </Division>
+    <Division ID="divContent" HtmlDiv="True">
+      <DataTable ID="dtAdmins" AjaxPaging="False" AltRowClass="ThemeAlternatingRow" BorderColor="#CCCCCC" CellPadding="4" CellSpacing="0" Class="ThemeDataTable" Width="100" WidthScale="%">
+        <DataLayer Type="SQL" ID="dlAdmins" ConnectionID="connMyGuitarShop" Source="SELECT admin_id, email_address, first_name, last_name FROM administrators ORDER BY last_name, first_name" />
+        <DataTableColumn ID="colAdminID" Header="Admin ID" Class="ThemeAlignRight">
+          <Label ID="lblAdminID" Caption="@Data.admin_id~" />
+          <DataColumnSort DataColumn="admin_id" DataType="Number" />
+        </DataTableColumn>
+        <DataTableColumn ID="colFirstName" Header="First Name">
+          <Label ID="lblFirstName" Caption="@Data.first_name~" />
+          <DataColumnSort DataColumn="first_name" DataType="Text" />
+        </DataTableColumn>
+        <DataTableColumn ID="colLastName" Header="Last Name">
+          <Label ID="lblLastName" Caption="@Data.last_name~" />
+          <DataColumnSort DataColumn="last_name" DataType="Text" />
+        </DataTableColumn>
+        <DataTableColumn ID="colEmail" Header="Email Address">
+          <Label ID="lblEmail" Caption="@Data.email_address~" />
+          <DataColumnSort DataColumn="email_address" DataType="Text" />
+        </DataTableColumn>
+      </DataTable>
+    </Division>
+  </Body>
+  <ideTestParams />
+</Report>

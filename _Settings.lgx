@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Setting ID="_Settings" SavedBy="LogiInfoStudio" SavedAt="2026-11-19 12:15:00" EngineVersion="14.0">
+  <Path rdAppPath="" />
+  <Constants>
+    <Constant ID="AppTitle" Value="My Guitar Shop Analytics" />
+    <Constant ID="DefaultPageSize" Value="20" />
+  </Constants>
+  <Connections>
+    <Connection Type="MySQL"
+                ID="connMyGuitarShop"
+                Server="127.0.0.1"
+                Port="3306"
+                Database="my_guitar_shop"
+                User="root"
+                Password="mKirsten34b#"
+                Charset="utf8mb4" />
+    <!-- Example additional connections supported by the loader:
+    <Connection Type="PostgreSQL" ID="connAnalytics" Server="127.0.0.1" Port="5432" Database="analytics" User="postgres" Password="secret" />
+    <Connection Type="SqlServer" ID="connERP" Server="localhost" Database="ERP_Prod" User="sa" Password="secret" />
+    <Connection Type="SQLite" ID="connLocal" Database="data/local.sqlite" />
+    -->
+  </Connections>
+</Setting>
